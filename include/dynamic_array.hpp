@@ -22,6 +22,8 @@ class dynamic_array {
         size_t get_size();
 
         void set(size_t index, const T& value);
+
+        
         void resize(size_t new_size);
 };
 
@@ -84,7 +86,7 @@ void dynamic_array<T>::resize(size_t new_size){
     if(new_size == size) return;
 
     auto new_items = new T[new_size];
-    std::copy(items, items + new_size, new_items);
+    std::copy(items, items + std::min({size, new_size}), new_items);
 
     delete[] items;
     items = new_items;

@@ -44,14 +44,18 @@ TEST_CASE("dyn_arr constructors", "[dyn_arr]"){
             darr_copy.get(1),
             darr_copy.get(2)
         };
-        int arr_full[] = {
+
+        darr_full.set(0, 342);
+        darr_full.set(2, 4);
+        int arr_copied_from[] = {
             darr_full.get(0),
             darr_full.get(1),
             darr_full.get(2)
         };
+        int new_arr[] = {342, 2, 4};
 
         CHECK(std::equal(std::begin(arr), std::end(arr), std::begin(arr_copy)));
-        CHECK(std::equal(std::begin(arr), std::end(arr), std::begin(arr_full)));
+        CHECK(std::equal(std::begin(new_arr), std::end(new_arr), std::begin(arr_copied_from)));
     }
 }
 
@@ -73,14 +77,17 @@ TEST_CASE("dyn_arr opertor=", "[dyn_arr]"){
             darr_copy.get(1),
             darr_copy.get(2)
         };
+
+        darr.set(0, -2);
         float arr_copied_from[] = {
             darr.get(0),
             darr.get(1),
             darr.get(2)
         };
+        float new_arr[] = {-2, arr[1], arr[2]};
 
         CHECK(std::equal(std::begin(arr), std::end(arr), std::begin(arr_copy)));
-        CHECK(std::equal(std::begin(arr), std::end(arr), std::begin(arr_copied_from)));
+        CHECK(std::equal(std::begin(new_arr), std::end(new_arr), std::begin(arr_copied_from)));
     }
 
     SECTION("self-assignment"){
@@ -136,6 +143,7 @@ TEST_CASE("dyn_arr resize", "[dyn_arr]"){
         CHECK(darr.get(0) == arr[0]);        
         CHECK(darr.get(1) == arr[1]);        
     }
+    
 
     SECTION("expand"){
         size_t new_size = 6;
