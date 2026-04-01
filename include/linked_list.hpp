@@ -8,52 +8,10 @@
 
 template<class T>
 class linked_list{
-    
-    struct node{
-        std::shared_ptr<node> next;
-        std::weak_ptr<node> prev;
-        T value;
-
-        template<class U>
-        node(U&& val) : value(std::forward<U>(val)) {};
-    };
-
-    class iterator{
-        private: 
-            std::weak_ptr<node> ptr;
-        public:
-            iterator() : ptr() {};
-            iterator(std::shared_ptr<node> ptr_) : ptr(ptr_) {};
-
-            iterator& operator++(){
-                ptr = ptr.lock()->next;
-                return *this;
-            }
-            T& operator*(){
-               return ptr.lock()->value;
-            }
-            const T& operator*() const{
-               return ptr.lock()->value;
-            }
-            bool operator!=(const iterator& other){
-                return ptr.lock() != other.ptr.lock();
-            }
-    };
-
-    private:
-        std::shared_ptr<node> head;
-        std::weak_ptr<node> tail;
-        size_t size;
-
-        std::shared_ptr<node> get_node(size_t index) {
-            if (index >= size) throw std::out_of_range("index out of range");
-            if (index == 0) return head;
-            node* cur = head.get();
-            for(; index > 1; --index) 
-                cur = cur->next.get();
-            return cur->next;
-        };
     public:
+        class iterator;
+        struct node;
+
         linked_list();
         linked_list(T* items, size_t size);
         linked_list(const linked_list<T>& other);
@@ -85,6 +43,13 @@ class linked_list{
         void clear();
 
         linked_list<T> get_sub_list(size_t start_index, size_t end_index) const;
+    
+    private:
+        std::shared_ptr<node> head;
+        std::weak_ptr<node> tail;
+        size_t size;
+
+        std::shared_ptr<node> get_node(size_t index);
 };
 
 template<class T> 
@@ -193,6 +158,15 @@ T linked_list<T>::get_last() {
     return tail.lock()->value;
 };
 template<class T>
+std::shared_ptr<typename linked_list<T>::node> get_node(size_t index) {
+    if (index >= linked_list<T>::size) throw std::out_of_range("index out of range");
+    if (index == 0) return linked_list<T>::head;
+    typename linked_list<T>::node* cur = linked_list<T>::head.get();
+    for(; index > 1; --index) 
+        cur = cur->next.get();
+    return cur->next;
+};
+template<class T>
 linked_list<T> linked_list<T>::get_sub_list(size_t start_index, size_t end_index) const {
     if(start_index > size || 
        end_index   > size || 
@@ -231,4 +205,47 @@ template<class T>
 linked_list<T>& linked_list<T>::operator+=(const linked_list<T>& other) {
     for(auto el: other) append(el);
     return *this;
+}
+
+
+template<class T>
+struct linked_list<T>::node{
+        std::shared_ptr<node> next;
+        std::weak_ptr<node> prev;
+        T value;
+
+        template<class U>
+        node(U&& val) : value(std::forward<U>(val)) {};
+    };
+
+
+template<class T>
+class linked_list<T>::iterator{
+    private: 
+        std::weak_ptr<node> ptr;
+    public:
+        iterator();
+        iterator(std::shared_ptr<node> ptr_);
+
+        iterator& operator++();
+        T& operator*();
+        bool operator!=(const iterator& other);
+};
+
+template<class T>
+linked_list<T>::iterator::iterator() : ptr() {};
+template<class T>
+linked_list<T>::iterator::iterator(std::shared_ptr<node> ptr_) : ptr(ptr_) {};
+template<class T>
+typename linked_list<T>::iterator& linked_list<T>::iterator::operator++(){
+    ptr = ptr.lock()->next;
+    return *this;
+}
+template<class T>
+T& linked_list<T>::iterator::operator*(){
+    return ptr.lock()->value;
+}
+template<class T>
+bool linked_list<T>::iterator::operator!=(const iterator& other){
+    return ptr.lock() != other.ptr.lock();
 }
