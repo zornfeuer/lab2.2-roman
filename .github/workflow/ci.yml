@@ -1,0 +1,27 @@
+name: Проверка тестов, линтера и сборки проекта
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Чек-аут
+        uses: actions/checkout@v4
+
+      - name: Установка инструментов сборки
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential cmake
+
+      - name: Конфигурация пространства сборки
+        run: cmake -B build -S .
+
+      - name: Сборка
+        run: cd build && make
+
+      - name: Тесты
+        run: ./build/tests
