@@ -4,6 +4,13 @@
 #include <iterator>
 #include <stdexcept>
 
+// NOTE(coverage): матрица «реализация ↔ dyn_arr_test.cpp»; T = int, float,
+// char.
+//   Покрыто: все конструкторы (включая initializer_list), деструктор, operator=
+//   (ветка this==&other и копирование), const/неконст [], get, set, begin/end
+//   через range-for, resize (меньше / больше / тот же size — ранний return).
+// TODO(coverage): operator= при другом other.size; dynamic_array(0); явный
+//   iterator::operator++ вне range-for (сейчас только косвенно).
 template <class T> class dynamic_array {
 public:
   class iterator;
@@ -21,6 +28,8 @@ public:
   T &operator[](size_t index);
 
   const T &get(size_t index) const;
+  // FIXME(API): логически не мутирует объект — лучше get_size() const; иначе
+  // нельзя вызывать у const dynamic_array (тесты это обходят).
   size_t get_size();
 
   void set(size_t index, const T &value);
@@ -63,6 +72,8 @@ template <class T> dynamic_array<T>::~dynamic_array() { delete[] items; }
 
 template <class T>
 dynamic_array<T> &dynamic_array<T>::operator=(const dynamic_array<T> &other) {
+  // NOTE(coverage): self-assignment — SECTION("self-assignment") в dyn_arr
+  // opertor=.
   if (this == &other)
     return *this;
 
@@ -92,7 +103,9 @@ template <class T> const T &dynamic_array<T>::get(size_t index) const {
   return items[index];
 }
 
-template <class T> size_t dynamic_array<T>::get_size() { return size; }
+template <class T> size_t dynamic_array<T>::get_size() {
+  return size;
+} // FIXME(API): const
 
 template <class T> void dynamic_array<T>::set(size_t index, const T &value) {
   if (index >= size)
@@ -101,6 +114,8 @@ template <class T> void dynamic_array<T>::set(size_t index, const T &value) {
 }
 
 template <class T> void dynamic_array<T>::resize(size_t new_size) {
+  // NOTE(coverage): ранний выход — SECTION("same size") в TEST_CASE("dyn_arr
+  // resize").
   if (new_size == size)
     return;
 

@@ -1,10 +1,21 @@
+#include <algorithm>
 #include <cstddef>
 #include <cstdlib>
 #include <initializer_list>
+#include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <utility>
 
+// NOTE(coverage): матрица «реализация ↔ linked_list_test.cpp»; T = int, float.
+//   Покрыто: default/(T*,n)/copy ctor, operator=/+/+= (вкл. self),
+//   append/prepend/ insert_at, get/get_first/get_last, get_sub_list,
+//   исключения, begin/end, member operator== через .operator==({…}) в CHECK,
+//   get_node косвенно.
+// TODO(coverage): создание списка конструктором linked_list(initializer_list) —
+//   в тестах почти везде (T*, size); member operator<<(ostream) не вызывается
+//   (нет std::cout/stringstream с list).
+// NOTE(coverage): clear() только из operator=; отдельного теста на clear нет.
 template <class T> class linked_list {
 public:
   class iterator;
@@ -20,6 +31,8 @@ public:
   linked_list<T> &operator=(const linked_list<T> &other);
   linked_list<T> operator+(const linked_list<T> &other) const;
   linked_list<T> &operator+=(const linked_list<T> &other);
+  bool operator==(std::initializer_list<T> arr);
+  std::ostream &operator<<(std::ostream &os) const;
 
   T get_first();
   T get_last();
@@ -62,12 +75,12 @@ linked_list<T>::linked_list(T *items, size_t size_) : size(0) {
 };
 template <class T>
 linked_list<T>::linked_list(const linked_list<T> &other) : size(0) {
-  for (const auto &el : other) {
-    append(el);
-  }
+  *this = other;
 };
 template <class T>
 linked_list<T>::linked_list(std::initializer_list<T> init_list) : size(0) {
+  // TODO(coverage): тело ctor вызывается только при linked_list<T>{…}; в тестах
+  //   список обычно собирают через (T*, n) — см. шапку файла.
   for (auto el : init_list) {
     append(el);
   }
@@ -123,6 +136,7 @@ void linked_list<T>::insert_at(size_t index, U &&item) {
   ++size;
 };
 template <class T> void linked_list<T>::clear() {
+  // NOTE(coverage): прямых вызовов в тестах нет; путь выполняется из operator=.
   head.reset();
   tail.reset();
   size = 0;
@@ -168,6 +182,8 @@ linked_list<T> linked_list<T>::get_sub_list(size_t start_index,
 
 template <class T>
 linked_list<T> &linked_list<T>::operator=(const linked_list<T> &other) {
+  // NOTE(coverage): ветка this == &other — SECTION("self-assignment")
+  // linked_list opertor=.
   if (this == &other)
     return *this;
   clear();
@@ -228,4 +244,29 @@ template <class T> T &linked_list<T>::iterator::operator*() {
 template <class T>
 bool linked_list<T>::iterator::operator!=(const iterator &other) {
   return ptr.lock() != other.ptr.lock();
+}
+
+template <class T>
+bool linked_list<T>::operator==(std::initializer_list<T> arr) {
+  // NOTE(coverage): исполняется из linked_list_test (.operator==({…}) в CHECK).
+  if (arr.size() != get_size())
+    return false;
+  return std::equal(std::begin(arr), std::end(arr), begin());
+}
+
+// TODO(coverage): linked_list_test не пишет list в поток — ветки форматирования
+//   здесь не гоняются (добавить stringstream или Catch stringification).
+template <class T>
+std::ostream &linked_list<T>::operator<<(std::ostream &os) const {
+  os << "list: {";
+  auto it = begin();
+  // NOTE: end() — конец диапазона; qualified имя избегает коллизии с локальной
+  //   переменной end (если переименовать — можно писать просто end()).
+  const auto end = linked_list<T>::end();
+  if (it != end) {
+    os << *it;
+    while (++it != end)
+      os << ", " << *it;
+  }
+  return os << "}\n";
 }
