@@ -26,8 +26,8 @@ coverage:
         echo 'TODO: установите genhtml (пакет lcov)' >&2
         exit 1
     }
-    lcov --capture --directory build_cov --output-file coverage.info
-    lcov --remove coverage.info '/usr/*' '*/_deps/*' -o coverage.filtered.info \
+    lcov --capture --directory build_cov --output-file coverage.info --ignore-errors source
+    lcov --remove coverage.info '/usr/*' '*/_deps/*' -o coverage.filtered.info --ignore-errors source \
         || cp coverage.info coverage.filtered.info
     genhtml coverage.filtered.info --output-directory coverage_html --title "lab2 tests"
     echo "NOTE(coverage): отчёт — file://$(pwd)/coverage_html/index.html"
@@ -48,4 +48,4 @@ lint: build
         echo 'FIXME: нет build/compile_commands.json — сначала just build' >&2
         exit 1
     }
-    clang-tidy tests/dyn_arr_test.cpp tests/linked_list_test.cpp -p build --quiet
+    clang-tidy -p build --quiet tests/dyn_arr_test.cpp tests/linked_list_test.cpp

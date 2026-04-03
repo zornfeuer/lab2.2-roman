@@ -1,0 +1,17 @@
+---
+# LLVM 22+ does not enable checks by default; without this, clang-tidy exits with
+# "Error: no checks enabled."
+Checks: >
+  clang-analyzer-*,
+  bugprone-*,
+  -bugprone-throwing-static-initialization,
+  performance-*,
+  readability-*,
+  -readability-magic-numbers,
+  -readability-identifier-length,
+  -readability-function-cognitive-complexity,
+  modernize-*,
+  -modernize-use-trailing-return-type,
+  -modernize-avoid-c-arrays
+HeaderFilterRegex: ".*"
+ExcludeHeaderFilterRegex: ".*/build/_deps/.*"
